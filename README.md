@@ -7,59 +7,41 @@ Pre-made environment for deploying infrastructure with Terraform using [Cloud Fo
 ## Usage
 
 ```bash
-docker run -it --volume="/path/to/app/infrastructure:/app" terraform-cf:latest
+docker run -it --volume="/path/to/app/infrastructure:/app" fredrb/terraform-cf:latest
 ```
 
-The image will run the following commands on `/app` folder:
+This command will fire a `/bin/sh` session on workdir with Terraform and Cloud Foundry provider available.
 
-```bash
-terraform init # initializes providers and identifies remote store
-terraform apply -auto-approve -input=false
+**Default workdir:** `/app`
+
+### Piper
+
+In case you're using [piper](https://github.com/SAP/jenkins-library/) in your pipeline, you can invoke this image using `dockerExecute` step follows:
+```groovy
+dockerExecute(
+script: this,
+dockerImage: 'fredrb/terraform-cf:latest',
+dockerEnvVars: [
+    'AWS_ACCESS_KEY_ID': '$AWS_ACCESS_KEY_ID',
+    'AWS_SECRET_ACCESS_KEY': '$AWS_SECRET_ACCESS_KEY',
+    'TF_VAR_some_var_to_tf': '$value'
+],
+dockerVolumeBind: [
+    "$PWD:/app"
+]
+) {
+    sh '''
+        terraform init
+        terraform apply -auto-approve -no-color -input=false
+    '''
+}
 ```
 
-### Modules
+### Credentials and variables
 
-If your application has multiple modules and the folder structure looks something like the following:
-
-```
-infrastructure/
-    prod/
-    dev/
-    qa/
-    modules/
-```
-
-Run the following:
-```bash
-docker run -it --volume="/path/to/app/infrastructure:/infrastructure" -w="/infrastructure/prod" terraform-cf:latest
-```
-
-Since the image will always execute `terraform` on `WORKDIR`, you can assign the volume to the infrastructure folder and set `WORKDIR` when running the container via `-w` parameter.
-
-
-### Custom Run Script
-
-In case you want to run specific commands against terraform, you can swap the bash file executed at `entrypoint`. 
-
-**custom_run.sh**
-```bash
-#!/bin/sh
-terraform init
-echo "running plan"
-terraform plan
-```
-
-And run:
-```
-docker run -it --volume="$PWD:/app" --entrypoint="/app/custom_run.sh" terraform-cf:latest
-```
-
-### Credentials, variables and variable files
-
-Information can be passed to Terraform either via environment variables or a variable file. Just like runnning locally.
-You can either use `-e VAR=VALUE` or specify the path of the var file (in the mounted volume) as `-e VAR_FILE='/path/to/tvars'`. 
+Information can be passed to Terraform via environment variables. Just like runnning locally.
 
 Example: 
 ```
-docker run -it --volume="$PWD/infrastructure:/infra" -w="/infra/prod" -e AWS_ACCESS_KEY_ID=<...> -e AWS_SECRET_ACCESS_KEY=<...> -e VAR_FILE="/infra/prod/terraform.tfvars" -e TF_VAR_some_var="<...>" terraform-cf:latest
+docker run -it --volume="$PWD:/app" -e AWS_ACCESS_KEY_ID=<...> -e AWS_SECRET_ACCESS_KEY=<...> -e TF_VAR_some_var="<...>" fredrb/terraform-cf:latest
 ```
