@@ -19,16 +19,16 @@ This command will fire a `/bin/sh` session on workdir with Terraform and Cloud F
 In case you're using [piper](https://github.com/SAP/jenkins-library/) in your pipeline, you can invoke this image using `dockerExecute` step follows:
 ```groovy
 dockerExecute(
-script: this,
-dockerImage: 'fredrb/terraform-cf:latest',
-dockerEnvVars: [
-    'AWS_ACCESS_KEY_ID': '$AWS_ACCESS_KEY_ID',
-    'AWS_SECRET_ACCESS_KEY': '$AWS_SECRET_ACCESS_KEY',
-    'TF_VAR_some_var_to_tf': '$value'
-],
-dockerVolumeBind: [
-    "$PWD:/app"
-]
+    script: this,
+    dockerImage: 'fredrb/terraform-cf:latest',
+    dockerEnvVars: [
+        'AWS_ACCESS_KEY_ID': '$AWS_ACCESS_KEY_ID',
+        'AWS_SECRET_ACCESS_KEY': '$AWS_SECRET_ACCESS_KEY',
+        'TF_VAR_some_var_to_tf': '$value'
+    ],
+    dockerVolumeBind: [
+        "$PWD:/app"
+    ]
 ) {
     sh '''
         terraform init
